@@ -44,14 +44,21 @@ class SceneDetail extends Component {
                 <div className="operation-links">
                     <h2>操作</h2>
                     <div className="links">
-                        <span>操作：</span>、
-                        <Button type="link">物料管理</Button>
+                        <span>操作：</span>
                         <Button type="link"
-                                onClick={() => this.props.history.push({pathname: `/scene-stations/${scene.id}`})}>站点管理</Button>
+                                onClick={() => this.props.history.push({pathname: `/scene-skus/${scene.id}`})}>
+                            物料管理
+                        </Button>
+                        <Button type="link"
+                                onClick={() => this.props.history.push({pathname: `/scene-stations/${scene.id}`})}>
+                            站点管理
+                        </Button>
                     </div>
                 </div>
                 <h2>基本信息</h2>
-                <Form labelCol={{span: 2}} labelAlign="left" ref={form => this.form = form}
+                <Form labelCol={{span: 2}}
+                      labelAlign="left"
+                      ref={form => this.form = form}
                       onFinish={data => this.updateScene(data)}>
                     <Form.Item label="name" name="name" rules={[{required: true, message: '请输入名称'}]}>
                         <Input/>
