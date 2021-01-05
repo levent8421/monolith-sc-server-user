@@ -22,6 +22,9 @@ class SceneStations extends Component {
 
     refreshStations() {
         fetchStationByScene(this.sceneId).then(res => {
+            for (let station of res) {
+                station.key = station.id;
+            }
             this.setState({stations: res});
         });
     }
@@ -35,9 +38,11 @@ class SceneStations extends Component {
     }
 
     renderTableOperations(data) {
+        const {history} = this.props;
+        const {id} = data;
         return (<>
             <Button type="link">解除绑定</Button>
-            <Button type="link">货道管理</Button>
+            <Button type="link" onClick={() => history.push({pathname: `/station-slots/${id}`})}>货道管理</Button>
             <Button type="link">修改</Button>
         </>);
     }

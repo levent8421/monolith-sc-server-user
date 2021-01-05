@@ -5,6 +5,7 @@ import UserInfo from '../com/UserInfo';
 import SceneDetail from '../com/scene/SceneDetail';
 import SceneStations from '../com/scene/SceneStations';
 import SceneSkuList from '../com/scene/SceneSkuList';
+import StationSlots from '../com/scene/StationSlots';
 
 export const routers = [
     {
@@ -41,5 +42,10 @@ export const routers = [
         path: '/scene-skus/:id',
         exact: true,
         component: SceneSkuList,
+    },
+    {
+        path: '/station-slots/:id',
+        exact: true,
+        component: StationSlots,
     }
 ];

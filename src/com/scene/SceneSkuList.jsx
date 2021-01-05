@@ -4,18 +4,10 @@ import {createCategory, fetchCategoriesByScene, fetchTopLevelCategoriesByScene} 
 import {Button, Col, Form, Input, InputNumber, message, Modal, Row, Select, Table, Tree} from 'antd';
 import {DeleteOutlined, EditOutlined, PlusOutlined} from '@ant-design/icons';
 import './SceneSkuList.less';
-import {fetchSkuByCategory, createSku} from "../../api/sku";
+import {createSku, fetchSkuByCategory} from "../../api/sku";
+import {addCategoryKey} from '../../util/converter';
 
 const PAGE_ROWS = 20;
-const addCategoryKey = category => {
-    category.key = category.id;
-    category.title = category.name;
-    if (category.children) {
-        for (let c of category.children) {
-            addCategoryKey(c);
-        }
-    }
-};
 
 class SceneSkuList extends Component {
     constructor(props) {
@@ -125,7 +117,7 @@ class SceneSkuList extends Component {
                         </div>
                         <Tree className="category-tree"
                               treeData={categories}
-                              onSelect={(_, e) => this.refreshSku(e.node, skuPage, skuRows)}/>
+                              onSelect={(_, e) => this.refreshSku(e.node, 1, PAGE_ROWS)}/>
                     </Col>
                     <Col span={20} className="sku-wrapper">
                         <h2>物料列表:[{selectedCategory.name || '未选择'}]</h2>

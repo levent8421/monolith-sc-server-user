@@ -28,3 +28,11 @@ export const fetchStationByScene = sceneId => {
         }
     });
 };
+
+
+export const fetchStationById = id => {
+    return request({
+        url: `/api/token/station/${id}`,
+        method: 'get',
+    });
+};
