@@ -1,14 +1,32 @@
 import React, {Component} from 'react';
 import {mapStateAndActions} from '../../store/storeUtils';
 import {createSlot, fetchSlotsByStation, setElabelState, setSku} from '../../api/slot';
-import {Button, Form, Input, InputNumber, message, Modal, Select, Switch, Table} from 'antd';
-import {PlusOutlined} from '@ant-design/icons';
+import {Button, Form, Input, InputNumber, List, message, Modal, Select, Switch, Table, Typography} from 'antd';
+import {
+    CheckCircleOutlined,
+    CloudDownloadOutlined,
+    FieldTimeOutlined,
+    LoadingOutlined,
+    PlusOutlined,
+    WarningOutlined
+} from '@ant-design/icons';
 import './StationSlots.less';
 import {SlotTypeOffsetTable} from '../../context/metaData';
 import SkuSelectModal from '../commons/SkuSelectModal';
-import {fetchStationById} from '../../api/station';
+import {fetchStationById, syncSku, syncSlotNo} from '../../api/station';
+import {fetchRecordsByTraceId, STATE_TABLE as SLOT_NO_SYNC_RECORD_STATE_TABLE} from '../../api/slotNoSyncRecord';
+import {fetchSkuSyncRecordsByTraceId, STATE_TABLE as SKU_SYNC_RECORD_STATE_TABLE} from '../../api/skuSyncRecord';
+import FetcherTask from "../../util/FetcherTask";
 
+const RECORD_DATA_FETCHER_DURATION = 1000;
 const PAGE_ROWS = 20;
+const slotNoSyncStateIconTable = {};
+slotNoSyncStateIconTable[SLOT_NO_SYNC_RECORD_STATE_TABLE.waiting] = LoadingOutlined;
+slotNoSyncStateIconTable[SLOT_NO_SYNC_RECORD_STATE_TABLE.error] = WarningOutlined;
+slotNoSyncStateIconTable[SLOT_NO_SYNC_RECORD_STATE_TABLE.success] = CheckCircleOutlined;
+slotNoSyncStateIconTable[SLOT_NO_SYNC_RECORD_STATE_TABLE.timeout] = FieldTimeOutlined;
+
+const {Text} = Typography;
 
 class StationSlots extends Component {
     constructor(props) {
@@ -22,6 +40,12 @@ class StationSlots extends Component {
             createModalVisible: false,
             skuSelectModalVisible: false,
             skuSelectSlot: {},
+            slotNoSyncModalVisible: false,
+            slotNoSyncTraceId: '',
+            slotNoSyncRecords: [],
+            skuSyncModalVisible: false,
+            skuSyncRecords: [],
+            skuSyncTraceId: '',
         };
     }
 
@@ -111,12 +135,145 @@ class StationSlots extends Component {
         });
     }
 
+    showSkuSyncResult(res) {
+        const {code, error, traceId} = res;
+        if (code !== 0) {
+            Modal.error({title: '同步失败', content: error});
+            return;
+        }
+        this.showSkuSyncModal(true, traceId);
+    }
+
+    showSkuSyncModal(show, traceId) {
+        this.setState({
+            skuSyncModalVisible: show,
+            skuSyncTraceId: traceId,
+        });
+        if (this.skuSyncRecordFetchTask) {
+            this.skuSyncRecordFetchTask.stop();
+            this.skuSyncRecordFetchTask = null;
+        }
+        this.skuSyncRecordFetchTask = new FetcherTask({
+            fetchData: () => fetchSkuSyncRecordsByTraceId(traceId),
+            onNewData: data => this.setSkuSyncResult(data),
+            onError: err => message.error('Error:' + err),
+            duration: RECORD_DATA_FETCHER_DURATION,
+        });
+        this.skuSyncRecordFetchTask.start();
+    }
+
+    setSkuSyncResult(data) {
+        this.setState({skuSyncRecords: data});
+        for (let record of data) {
+            const {state} = record;
+            if (state === SKU_SYNC_RECORD_STATE_TABLE.timeout) {
+                return;
+            }
+        }
+        this.skuSyncRecordFetchTask.stop();
+    }
+
+    syncSkuInfo() {
+        const stationId = this.stationId;
+        const _this = this;
+        Modal.confirm({
+            title: '确认同步',
+            content: '确认同步物料信息？',
+            okText: '同步',
+            cancelText: '取消',
+            onOk: () => {
+                syncSku(stationId).then(res => _this.showSkuSyncResult(res));
+            }
+        });
+    }
+
+    syncSlotNoInfo() {
+        const stationId = this.stationId;
+        const _this = this;
+        Modal.confirm({
+            title: '确认同步',
+            content: '确认同步站点所有货道号信息？',
+            okText: '确认',
+            cancelText: '取消',
+            onOk: () => syncSlotNo(stationId).then(res => _this.showSlotNoSyncResult(res))
+        });
+    }
+
+    showSlotNoSyncResult(res) {
+        const {code, error, traceId} = res;
+        if (code !== 0) {
+            Modal.error({title: '同步失败', content: error});
+            return;
+        }
+        this.showSlotNoSyncModal(true, traceId);
+    }
+
+    showSlotNoSyncModal(show, traceId) {
+        this.setState({
+            slotNoSyncModalVisible: show,
+            slotNoSyncTraceId: traceId,
+        });
+        const _this = this;
+        if (show) {
+            if (this.slotNoSyncRecordFetcherTask) {
+                this.slotNoSyncRecordFetcherTask.stop();
+                this.slotNoSyncRecordFetcherTask = null;
+            }
+            this.slotNoSyncRecordFetcherTask = new FetcherTask({
+                fetchData: () => fetchRecordsByTraceId(traceId),
+                onNewData: res => _this.setSlotNoSyncRecords(res),
+                onError: err => message.error('err:' + err),
+                duration: RECORD_DATA_FETCHER_DURATION,
+            });
+            this.slotNoSyncRecordFetcherTask.start();
+        }
+    }
+
+    setSlotNoSyncRecords(res) {
+        this.setState({
+            slotNoSyncRecords: res,
+        });
+        for (let record of res) {
+            const {state} = record;
+            if (state === SLOT_NO_SYNC_RECORD_STATE_TABLE.waiting) {
+                return;
+            }
+        }
+        if (this.slotNoSyncRecordFetcherTask) {
+            this.slotNoSyncRecordFetcherTask.stop();
+            this.slotNoSyncRecordFetcherTask = null;
+        }
+    }
+
     render() {
-        const {slots, pageNum, totalRows, pageRows, createModalVisible, skuSelectModalVisible, skuSelectSlot, station} = this.state;
+        const {
+            slots,
+            pageNum,
+            totalRows,
+            pageRows,
+            createModalVisible,
+            skuSelectModalVisible,
+            skuSelectSlot,
+            station,
+            slotNoSyncModalVisible,
+            slotNoSyncTraceId,
+            slotNoSyncRecords,
+            skuSyncModalVisible,
+            skuSyncTraceId,
+            skuSyncRecords,
+        } = this.state;
         return (
             <div className="slots">
                 <div className="btns">
                     <Button icon={<PlusOutlined/>} type="primary" onClick={() => this.showCreateModal(true)}/>
+                    <Button icon={<CloudDownloadOutlined/>} type="primary"
+                            onClick={() => this.syncSlotNoInfo()}>
+                        同步库位信息
+                    </Button>
+                    <Button icon={<CloudDownloadOutlined/>} type="primary"
+                            onClick={() => this.syncSkuInfo()}>
+                        同步物料信息
+                    </Button>
                 </div>
                 <Table dataSource={slots} pagination={{
                     current: pageNum,
@@ -176,6 +333,41 @@ class StationSlots extends Component {
                                 onCancel={() => this.showSkuSelectModal(false, {})}
                                 onOk={data => this.setSku(data)}
                                 sceneId={station.sceneId || 0}/>
+                <Modal title={`同步中，操作记录号：${slotNoSyncTraceId}`}
+                       visible={slotNoSyncModalVisible}
+                       okText="确定"
+                       cancelText="取消"
+                       onOk={() => this.showSlotNoSyncModal(false, '',)}
+                       onCancel={() => this.showSlotNoSyncModal(false, '',)}>
+                    <List header="下发任务"
+                          dataSource={slotNoSyncRecords}
+                          renderItem={record => {
+                              const Icon = slotNoSyncStateIconTable[record.state];
+                              return (<List.Item extra={Icon ? <Icon/> : ''}>
+                                  <Text mark>{record.address}</Text>
+                                  <Text>{record.slotNo}</Text>
+                                  <Text>{record.msg}</Text>
+                              </List.Item>)
+                          }}/>
+                </Modal>
+                <Modal
+                    title={`同步中，操作记录号：${skuSyncTraceId}`}
+                    visible={skuSyncModalVisible}
+                    okText="确认"
+                    cancelText="取消"
+                    onOk={() => this.showSkuSyncModal(false, '')}
+                    onCancel={() => this.showSkuSyncModal(false, '')}>
+                    <List dataSource={skuSyncRecords}
+                          renderItem={record => {
+                              const Icon = slotNoSyncStateIconTable[record.state];
+                              return (<List.Item extra={Icon ? <Icon/> : ''}>
+                                  <Text mark>{record.slotNo}</Text>
+                                  <Text>{record.skuName}</Text>
+                                  <Text>{record.msg}</Text>
+                              </List.Item>);
+                          }}
+                          header="同步结果"/>
+                </Modal>
             </div>
         );
     }

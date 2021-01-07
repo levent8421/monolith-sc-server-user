@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Avatar, Col, List, message, Modal, Row, Tree, Typography} from 'antd/lib';
+import {Col, List, message, Modal, Row, Tree, Typography} from 'antd/lib';
 import PropTypes from 'prop-types';
 import {fetchCategoriesByScene} from '../../api/skuCategory';
 import {fetchSkuByCategory} from '../../api/sku';
@@ -7,7 +7,7 @@ import {addCategoryKey} from '../../util/converter';
 import './SkuSelectModal.less';
 import {BorderOutlined, CheckCircleFilled} from '@ant-design/icons';
 
-const {Text} = Typography;
+const {Text, Link} = Typography;
 const PAGE_ROWS = 20;
 
 class SkuSelectModal extends Component {
@@ -83,8 +83,10 @@ class SkuSelectModal extends Component {
     renderSkuItem(item) {
         return (<List.Item onClick={() => this.onSkuSelected(item)}>
             <Text>
-                <Avatar>{item.selected ? <CheckCircleFilled/> : <BorderOutlined/>}</Avatar>
-                {item.name}
+                <Text>
+                    {item.selected ? <CheckCircleFilled/> : <BorderOutlined/>}
+                </Text>
+                <Link>{item.name}</Link>
             </Text>
         </List.Item>)
     }

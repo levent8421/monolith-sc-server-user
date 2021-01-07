@@ -36,3 +36,19 @@ export const fetchStationById = id => {
         method: 'get',
     });
 };
+
+
+export const syncSlotNo = id => {
+    return request({
+        url: `/api/token/station/${id}/_sync-slot-no`,
+        method: 'post',
+    });
+};
+
+
+export const syncSku = id => {
+    return request({
+        url: `/api/token/station/${id}/_sync-sku`,
+        method: 'post',
+    });
+};
