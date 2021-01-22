@@ -52,3 +52,11 @@ export const syncSku = id => {
         method: 'post',
     });
 };
+
+export const updateStation = station => {
+    return request({
+        url: `/api/token/station/${station.id}`,
+        method: 'post',
+        data: station,
+    });
+};

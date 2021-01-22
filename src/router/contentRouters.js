@@ -6,6 +6,7 @@ import SceneDetail from '../com/scene/SceneDetail';
 import SceneStations from '../com/scene/SceneStations';
 import SceneSkuList from '../com/scene/SceneSkuList';
 import StationSlots from '../com/scene/StationSlots';
+import StationSlotState from "../com/scene/StationSlotState";
 
 export const routers = [
     {
@@ -47,5 +48,10 @@ export const routers = [
         path: '/station-slots/:id',
         exact: true,
         component: StationSlots,
+    },
+    {
+        path: '/station-slot-state/:id',
+        exact: true,
+        component: StationSlotState,
     }
 ];

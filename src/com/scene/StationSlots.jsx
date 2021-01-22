@@ -17,6 +17,7 @@ import {fetchStationById, syncSku, syncSlotNo} from '../../api/station';
 import {fetchRecordsByTraceId, STATE_TABLE as SLOT_NO_SYNC_RECORD_STATE_TABLE} from '../../api/slotNoSyncRecord';
 import {fetchSkuSyncRecordsByTraceId, STATE_TABLE as SKU_SYNC_RECORD_STATE_TABLE} from '../../api/skuSyncRecord';
 import FetcherTask from "../../util/FetcherTask";
+import SlotStateModal from './SlotStateModal';
 
 const RECORD_DATA_FETCHER_DURATION = 1000;
 const PAGE_ROWS = 20;
@@ -46,6 +47,8 @@ class StationSlots extends Component {
             skuSyncModalVisible: false,
             skuSyncRecords: [],
             skuSyncTraceId: '',
+            stateSlot: {},
+            slotStateModalVisible: false,
         };
     }
 
@@ -105,9 +108,16 @@ class StationSlots extends Component {
         });
     }
 
+    showSlotStateModal(visible, slot) {
+        this.setState({
+            stateSlot: slot,
+            slotStateModalVisible: visible,
+        });
+    }
+
     renderTableOperations(data) {
         return (<>
-            <Button type="link">状态</Button>
+            <Button type="link" onClick={() => this.showSlotStateModal(true, data)}>状态</Button>
             <Button type="link" onClick={() => this.showSkuSelectModal(true, data)}>物料</Button>
             <Button type="link">修改</Button>
         </>);
@@ -261,6 +271,8 @@ class StationSlots extends Component {
             skuSyncModalVisible,
             skuSyncTraceId,
             skuSyncRecords,
+            stateSlot,
+            slotStateModalVisible,
         } = this.state;
         return (
             <div className="slots">
@@ -368,6 +380,9 @@ class StationSlots extends Component {
                           }}
                           header="同步结果"/>
                 </Modal>
+                <SlotStateModal visible={slotStateModalVisible}
+                                slot={stateSlot}
+                                onClose={() => this.showSlotStateModal(false, {})}/>
             </div>
         );
     }
