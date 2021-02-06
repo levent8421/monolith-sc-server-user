@@ -40,3 +40,13 @@ export const setSku = (slotId, skuId) => {
         }
     });
 };
+
+export const fetchLastSlotDataByStation = stationId => {
+    return request({
+        url: '/api/token/slot/_last-data-by-station',
+        method: 'get',
+        params: {
+            stationId,
+        }
+    });
+};

@@ -24,10 +24,18 @@ class SceneStations extends Component {
 
     refreshStations() {
         fetchStationByScene(this.sceneId).then(res => {
-            for (let station of res) {
+            const stations = [];
+            for (let state of res) {
+                const {station, connected, appName, appVersion, dbVersion, timestamp} = state;
                 station.key = station.id;
+                station.connected = connected;
+                station.appName = appName;
+                station.appVersion = appVersion;
+                station.dbVersion = dbVersion;
+                station.timestamp = timestamp;
+                stations.push(station);
             }
-            this.setState({stations: res});
+            this.setState({stations: stations});
         });
     }
 
@@ -82,6 +90,12 @@ class SceneStations extends Component {
                     <Table.Column dataIndex="id" title="#" key="id"/>
                     <Table.Column dataIndex="name" title="站点名称" key="name"/>
                     <Table.Column dataIndex="description" title="描述" key="description"/>
+                    <Table.Column dataIndex="connected" title="状态" key="connected"
+                                  render={connected => connected ? '已连接' : '离线'}/>
+                    <Table.Column dataIndex="appVersion" title="应用版本" key="appVersion"/>
+                    <Table.Column dataIndex="appName" title="应用名称" key="appName"/>
+                    <Table.Column dataIndex="dbVersion" title="数据库版本" key="dbVersion"/>
+                    <Table.Column dataIndex="timestamp" title="心跳时间" key="timestamp"/>
                     <Table.Column title="操作" key="operations" render={data => this.renderTableOperations(data)}/>
                 </Table>
                 <Modal title="修改站点信息"

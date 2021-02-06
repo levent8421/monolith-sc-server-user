@@ -11,7 +11,7 @@ import {
     UserOutlined
 } from '@ant-design/icons';
 import './Index.less';
-import Logo from '../img/logo_yidian.png';
+import Logo from '../img/logo_green.png';
 import {routers} from '../router/contentRouters';
 import {renderRoutes} from 'react-router-config';
 
