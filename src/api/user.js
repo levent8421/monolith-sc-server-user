@@ -15,3 +15,20 @@ export const fetchMe = () => {
         method: 'get',
     });
 };
+
+
+export const resetPassword = param => {
+    return request({
+        url: '/api/token/user/_reset-password',
+        method: 'post',
+        data: param,
+    });
+};
+
+export const updateUserInfo = user => {
+    return request({
+        url: '/api/token/user/_me',
+        method: 'post',
+        data: user,
+    });
+};

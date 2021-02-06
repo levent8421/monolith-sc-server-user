@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import {mapStateAndActions} from '../store/storeUtils';
-import {Avatar, Button, Col, Form, Input, Modal, Row, Typography} from 'antd';
+import {Avatar, Button, Col, Form, Input, message, Modal, Row, Typography} from 'antd';
 import {UserOutlined} from '@ant-design/icons';
-import {fetchMe} from '../api/user';
+import {fetchMe, resetPassword, updateUserInfo} from '../api/user';
 import './UserInfo.less';
 
 const {Title} = Typography;
@@ -33,13 +33,31 @@ class UserInfo extends Component {
         this.refreshUserInfo();
     }
 
-    showUpdateUserModal(show) {
-        console.log(show);
+    showResetPasswordModal(show) {
         this.setState({resetPasswordModalVisible: show})
     }
 
     updateUser(data) {
+        updateUserInfo(data).then(res => {
+            message.success(`用户[${res.username}]更新成功！`);
+        });
+    }
 
+    doResetPassword(data) {
+        const {rePassword, password, oldPassword} = data;
+        if (rePassword !== password) {
+            message.error('两次输入密码不一至！');
+            return;
+        }
+        const param = {
+            password,
+            oldPassword
+        };
+        const _this = this;
+        resetPassword(param).then(res => {
+            message.success(`用户[${res.loginName}]密码重置成功`);
+            _this.showResetPasswordModal(false);
+        });
     }
 
     render() {
@@ -68,15 +86,23 @@ class UserInfo extends Component {
                             </Avatar>
                         </div>
                         <div className="right-btns">
-                            <Button type="primary" onClick={() => this.showUpdateUserModal(true)}>重置密码</Button>
+                            <Button type="primary" onClick={() => this.showResetPasswordModal(true)}>重置密码</Button>
                         </div>
                     </Col>
                 </Row>
                 <Modal title="重置密码" visible={resetPasswordModalVisible}
-                       onCancel={() => this.showUpdateUserModal(false)}
-                       cancelText="取消" okText="确定">
-                    <Form ref={form => this.resetPasswordForm = form}>
-                        <Form.Item label="原密码">
+                       onCancel={() => this.showResetPasswordModal(false)}
+                       cancelText="取消" okText="确定"
+                       onOk={() => this.resetPasswordForm && this.resetPasswordForm.submit()} closable={false}
+                       maskClosable={false}>
+                    <Form ref={form => this.resetPasswordForm = form} onFinish={data => this.doResetPassword(data)}>
+                        <Form.Item label="原密码" name="oldPassword" rules={[{required: true, message: '请输入原密码'}]}>
+                            <Input/>
+                        </Form.Item>
+                        <Form.Item label="新密码" name="password" rules={[{required: true, message: '请输入新密码'}]}>
+                            <Input/>
+                        </Form.Item>
+                        <Form.Item label="重复密码" name="rePassword" rules={[{required: true, message: '请重复输入新密码'}]}>
                             <Input/>
                         </Form.Item>
                     </Form>
