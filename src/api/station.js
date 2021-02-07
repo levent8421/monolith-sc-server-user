@@ -60,3 +60,11 @@ export const updateStation = station => {
         data: station,
     });
 };
+
+export const unbind = stationId => {
+    return request({
+        url: `/api/token/station/${stationId}/_unbind`,
+        method: 'post',
+        data: {}
+    });
+};

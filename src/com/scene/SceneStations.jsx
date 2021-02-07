@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {fetchSceneById} from '../../api/scene';
 import {mapStateAndActions} from '../../store/storeUtils';
 import {Button, Form, Input, message, Modal, Table} from 'antd';
-import {fetchStationByScene, updateStation} from '../../api/station';
+import {fetchStationByScene, unbind, updateStation} from '../../api/station';
 
 class SceneStations extends Component {
     constructor(props) {
@@ -66,12 +66,28 @@ class SceneStations extends Component {
         });
     }
 
+    showUnbindConfirm(station) {
+        const _this = this;
+        Modal.confirm({
+            title: '确认解除绑定',
+            content: `确认解除站点【${station.name}】与该场景的绑定？该操作将清空站点的所有货道配置与数据，请谨慎操作！`,
+            okText: '确定',
+            cancelText: '取消',
+            onOk: () => {
+                unbind(station.id).then(res => {
+                    message.success(`站点【${res.name}】解绑成功！`);
+                    _this.refreshStations();
+                });
+            }
+        });
+    }
+
     renderTableOperations(data) {
         const {history} = this.props;
         const {id} = data;
         return (<>
             <div>
-                <Button type="link">解除绑定</Button>
+                <Button type="link" onClick={() => this.showUnbindConfirm(data)}>解除绑定</Button>
                 <Button type="link" onClick={() => this.showUpdateModal(true, data)}>修改</Button>
             </div>
             <div>
