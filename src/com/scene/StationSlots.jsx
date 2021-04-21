@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {mapStateAndActions} from '../../store/storeUtils';
-import {createSlot, fetchSlotsByStation, setElabelState, setSku} from '../../api/slot';
+import {createSlot, fetchSlotsByStation, setElabelState, setSku, updateSlotNoById} from '../../api/slot';
 import {Button, Form, Input, InputNumber, List, message, Modal, Select, Switch, Table, Typography} from 'antd';
 import {
     CheckCircleOutlined,
@@ -49,6 +49,8 @@ class StationSlots extends Component {
             skuSyncTraceId: '',
             stateSlot: {},
             slotStateModalVisible: false,
+            updateSlotNoModal: false,
+            updateSlotNo: {},
         };
     }
 
@@ -115,11 +117,35 @@ class StationSlots extends Component {
         });
     }
 
+    showUpdateSlotNo(show, slot) {
+        this.setState({
+            updateSlotNoModal: show,
+            updateSlotNo: slot,
+        });
+    }
+
+    updateSlotNoSubmit(show, data) {
+        this.setState({
+            updateSlotNoModal: show,
+        });
+        const slotId = this.state.updateSlotNo.id;
+        const slotNo = data.slotNo;
+        const _this = this;
+        updateSlotNoById(slotId, slotNo).then(res => {
+            if (res === 0) {
+                message.success("修改后货道号与原货道号相同！").then();
+            } else {
+                message.success("成功修改" + res + "条数据").then();
+            }
+            _this.refreshSlots(1, PAGE_ROWS);
+        });
+    }
+
     renderTableOperations(data) {
         return (<>
             <Button type="link" onClick={() => this.showSlotStateModal(true, data)}>状态</Button>
             <Button type="link" onClick={() => this.showSkuSelectModal(true, data)}>物料</Button>
-            <Button type="link">修改</Button>
+            <Button type="link" onClick={() => this.showUpdateSlotNo(true, data)}>修改</Button>
         </>);
     }
 
@@ -273,6 +299,8 @@ class StationSlots extends Component {
             skuSyncRecords,
             stateSlot,
             slotStateModalVisible,
+            updateSlotNoModal,
+            updateSlotNo,
         } = this.state;
         return (
             <div className="slots">
@@ -379,6 +407,19 @@ class StationSlots extends Component {
                               </List.Item>);
                           }}
                           header="同步结果"/>
+                </Modal>
+                <Modal visible={updateSlotNoModal}
+                       title="修改货道信息"
+                       okText="确认"
+                       cancelText="取消"
+                       onOk={() => this.createForm && this.createForm.submit()}
+                       onCancel={() => this.showUpdateSlotNo(false, '')}>
+                    <Form ref={form => this.createForm = form}
+                          initialValues={updateSlotNo} onFinish={data => this.updateSlotNoSubmit(false, data)}>
+                        <Form.Item label="货道号" name="slotNo">
+                            <Input/>
+                        </Form.Item>
+                    </Form>
                 </Modal>
                 <SlotStateModal visible={slotStateModalVisible}
                                 slot={stateSlot}

@@ -50,3 +50,13 @@ export const fetchLastSlotDataByStation = stationId => {
         }
     });
 };
+
+export const updateSlotNoById = (slotId, slotNo) => {
+    return request({
+        url: `/api/token/slot/${slotId}/_update-slot-no-by-id`,
+        method: 'post',
+        data: {
+            slotNo: slotNo,
+        },
+    })
+};
